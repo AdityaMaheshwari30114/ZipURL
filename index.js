@@ -1,12 +1,17 @@
 const express = require('express');
 const { connectToMongoDB} = require("./connect");
-const urlRoute = require('./routes/routes.url');
-
-const staticRoute = require('./routes/staticRouter'); 
 const path = require("path");
-const URL = require('./models/url');
+
 const app = express();
 const port = 8001;
+
+const urlRoute = require('./routes/routes.url');
+const staticRoute = require('./routes/staticRouter');
+const URL = require('./models/url');
+const userRoute = require("./routes/user");
+const {restrictToLoggedInUsersOnly, checkAuth} = require("./middlewares/auth");
+
+const cookieParser = require("cookie-parser");
 
 connectToMongoDB('mongodb://localhost:27017/short-url')
 .then(()=> console.log('Mongodb connected'));
@@ -17,11 +22,11 @@ app.set("views", path.resolve("./views") )
 
 app.use(express.json()); // will support JSON data
 app.use(express.urlencoded({extended: false})); // will support Form data
+app.use(cookieParser());
 
-app.use("/url", urlRoute);
-app.use("/", staticRoute);
-
-
+app.use("/", checkAuth, staticRoute);
+app.use("/url", restrictToLoggedInUsersOnly, urlRoute); //inline middleware
+app.use("/user", userRoute);
 
 app.get('/url/:shortId', async(req,res) =>{
     const shortId = req.params.shortId;
