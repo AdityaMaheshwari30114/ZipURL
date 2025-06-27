@@ -11,3 +11,8 @@ URL Shortner Service
     Functionality -- exports
 -Models
     schema
+
+
+for session
+
+created middleware object user id
